@@ -8,6 +8,8 @@ class Container
 
     private $inProcessArgs = [];
 
+    private $inProcessClasses = [];
+
     private $sharedClasses = [];
 
     public function __construct()
@@ -37,6 +39,7 @@ class Container
         }
 
         $this->inProcessArgs = [];
+        $this->inProcessClasses = [];
 
         foreach($args as $argName => $argValue) {
             $this->inProcessArgs[$argName] = $argValue;
@@ -53,6 +56,12 @@ class Container
 
     protected function resolve($className)
     {
+        if (isset($this->inProcessClasses[$className])) {
+            throw new \Exception('Infinite Loop');
+        }
+
+        $this->inProcessClasses[$className] = true;
+
         $reflectionClass = new \ReflectionClass($className);
         $constructor = $reflectionClass->getConstructor();
 
@@ -70,7 +79,15 @@ class Container
 
         foreach ($params as $param) {
             if (!is_null($param->getClass())) {
-                $newInstanceParams[] = $this->resolve( $param->getClass()->getName() );
+
+                $newClassName = $param->getClass()->getName();
+
+                if (isset($this->sharedClasses[$newClassName])) {
+                    echo 'hi';
+                    return $this->sharedClasses[$newClassName];
+                }
+
+                $newInstanceParams[] = $this->resolve( $newClassName );
             } else {
                 $paramName = $param->getName();
                 $newInstanceParams[] = $this->inProcessArgs[$paramName];
