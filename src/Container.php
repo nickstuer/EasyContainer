@@ -12,6 +12,8 @@ class Container
 
     private $sharedClasses = [];
 
+    private $recentObject;
+
     public function __construct()
     {
 
@@ -24,12 +26,16 @@ class Container
         }
     }
 
-    public function share($instance)
+    public function share($object)
     {
-        if (is_object($instance)) {
-            $className = get_class($instance);
-            $this->sharedClasses[$className] = $instance;
+        if (is_object($object)) {
+            $className = get_class($object);
+            $this->sharedClasses[$className] = $object;
+        } else {
+            $this->sharedClasses[$object] = $this->resolve($this->resolve($object));
         }
+
+
     }
 
     public function make($className, $args = [])
@@ -51,7 +57,7 @@ class Container
             }
         }
 
-        return $this->resolve($className);
+        return $this->resolve($this->resolve($className));
     }
 
     protected function resolve($className)
