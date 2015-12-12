@@ -90,7 +90,10 @@ class Container
                 $newInstanceParams[] = $this->resolve( $newClassName );
             } else {
                 $paramName = $param->getName();
-                $newInstanceParams[] = $this->inProcessArgs[$paramName];
+
+                if (isset($this->inProcessArgs[$paramName])) {
+                    $newInstanceParams[] = $this->inProcessArgs[$paramName];
+                }
             }
         }
 
