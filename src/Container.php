@@ -32,7 +32,7 @@ class Container
             $className = get_class($object);
             $this->sharedClasses[$className] = $object;
         } else {
-            $this->sharedClasses[$object] = $this->resolve($this->resolve($object));
+            $this->sharedClasses[$object] = $this->make($object);
         }
 
 
