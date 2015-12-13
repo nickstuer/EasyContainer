@@ -10,9 +10,7 @@ class Container
 
     private $inProcessClasses = [];
 
-    private $sharedClasses = [];
-
-    private $recentObject;
+    private $sharedObjects = [];
 
     public function __construct()
     {
@@ -26,22 +24,20 @@ class Container
         }
     }
 
-    public function share($object)
+    public function share($objectOrClass)
     {
-        if (is_object($object)) {
-            $className = get_class($object);
-            $this->sharedClasses[$className] = $object;
+        if (is_object($objectOrClass)) {
+            $className = get_class($objectOrClass);
+            $this->sharedObjects[$className] = $objectOrClass;
         } else {
-            $this->sharedClasses[$object] = $this->make($object);
+            $this->sharedObjects[$objectOrClass] = $this->make($objectOrClass);
         }
-
-
     }
 
     public function make($className, $args = [])
     {
-        if (isset($this->sharedClasses[$className])) {
-            return $this->sharedClasses[$className];
+        if (isset($this->sharedObjects[$className])) {
+            return $this->sharedObjects[$className];
         }
 
         $this->inProcessArgs = [];
@@ -57,7 +53,7 @@ class Container
             }
         }
 
-        return $this->resolve($this->resolve($className));
+        return $this->resolve($className);
     }
 
     protected function resolve($className)
@@ -67,6 +63,7 @@ class Container
         }
 
         $this->inProcessClasses[$className] = true;
+
 
         $reflectionClass = new \ReflectionClass($className);
         $constructor = $reflectionClass->getConstructor();
@@ -88,12 +85,12 @@ class Container
 
                 $newClassName = $param->getClass()->getName();
 
-                if (isset($this->sharedClasses[$newClassName])) {
-                    echo 'hi';
-                    return $this->sharedClasses[$newClassName];
+                if (isset($this->sharedObjects[$newClassName])) {
+                    $newInstanceParams[] = $this->sharedObjects[$newClassName];
+                } else {
+                    echo "Here: " . $newClassName . "<br>";
+                    $newInstanceParams[] = $this->resolve($newClassName);
                 }
-
-                $newInstanceParams[] = $this->resolve( $newClassName );
             } else {
                 $paramName = $param->getName();
 
